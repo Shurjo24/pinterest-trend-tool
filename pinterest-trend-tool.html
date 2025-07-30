@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinterest Trends Dashboard - Complete Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #000000;
+            overflow-x: hidden;
+        }
+        
+        .serif { font-family: 'Playfair Display', serif; }
+        
+        .luxury-bg {
+            background: linear-gradient(135deg, #000000 0%, #111111 25%, #1a1a1a 50%, #0d0d0d 75%, #000000 100%);
+            position: relative;
+        }
+        
+        .luxury-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(230, 0, 35, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(230, 0, 35, 0.04) 0%, transparent 50%);
+            animation: pulse 6s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.9),
+                0 0 40px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #888888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .chrome-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .chrome-input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 0 20px rgba(255, 255, 255, 0.1),
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
+            outline: none;
+        }
+        
+        .chrome-button {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                rgba(0, 0, 0, 0.1) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chrome-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.2), 
+                transparent);
+            transition: left 0.6s;
+        }
+        
+        .chrome-button:hover::before {
+            left: 100%;
+        }
+        
+        .chrome-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.8),
+                0 0 30px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .luxury-grid {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        .stat-glow {
+            text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+            animation: pulse-glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3); }
+            100% { text-shadow: 0 8px 30px rgba(255, 255, 255, 0.5); }
+        }
+
+        .admin-panel {
+            background: linear-gradient(135deg, rgba(230, 0, 35, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(230, 0, 35, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(22, 163, 74, 0.9) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen luxury-bg">
+    
+    <!-- Notification System -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen luxury-bg luxury-grid flex items-center justify-center p-6">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full floating-element">
+            <div class="text-center mb-8">
+                <div class="mb-4">
+                    <svg width="80" height="80" viewBox="0 0 80 80" class="mx-auto">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#E60023;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#FF4757;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#E60023;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+                                <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:0.8" />
+                            </linearGradient>
+                        </defs>
+                        
+                        <circle cx="40" cy="40" r="35" fill="url(#logoGradient)" opacity="0.9"/>
+                        <path d="M25 50 L35 35 L45 42 L55 25" stroke="url(#accentGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M50 25 L55 25 L55 30" stroke="url(#accentGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="30" cy="45" r="2" fill="url(#accentGradient)" opacity="0.8"/>
+                        <circle cx="40" cy="38" r="2" fill="url(#accentGradient)" opacity="0.8"/>
+                        <circle cx="50" cy="30" r="2" fill="url(#accentGradient)" opacity="0.8"/>
+                        <path d="M40 15 C45 15 48 18 48 22 C48 26 45 29 40 32 C35 29 32 26 32 22 C32 18 35 15 40 15 Z" fill="url(#accentGradient)" opacity="0.3"/>
+                        <circle cx="40" cy="22" r="3" fill="url(#accentGradient)" opacity="0.6"/>
+                    </svg>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2 gradient-text serif">PINTREND ANALYTICS</h1>
+                <p class="text-gray-300 font-medium">Complete Pinterest Trends Dashboard</p>
+                <div class="mt-2 text-xs text-gray-500 font-mono">Full-Stack Edition | v3.0</div>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="space-y-6">
+                    <div class="relative">
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">👤</div>
+                        <input 
+                            type="email" 
+                            id="emailInput"
+                            placeholder="Admin Email"
+                            class="w-full p-4 pl-12 rounded-2xl chrome-input text-white placeholder-gray-400"
+                            value="admin@pinterest.com"
+                            required
+                        />
+                    </div>
+                    <div class="relative">
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🔐</div>
+                        <input 
+                            type="password" 
+                            id="passwordInput"
+                            placeholder="Password"
+                            class="w-full p-4 pl-12 rounded-2xl chrome-input text-white placeholder-gray-400"
+                            value="admin123"
+                            required
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        class="w-full chrome-button text-white font-bold py-4 rounded-2xl text-lg relative z-10"
+                    >
+                        ✨ Access Dashboard
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-8 glass-card p-4 rounded-2xl border border-white/20">
+                <div class="text-center">
+                    <div class="text-gray-400 text-sm mb-2 serif">Demo Credentials (Pre-filled)</div>
+                    <div class="text-white/90 text-sm">
+                        Email: admin@pinterest.com<br>
+                        Password: admin123
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="hidden">
+        <!-- Header -->
+        <header class="glass-card border-b border-white/10 relative">
+            <div class="max-w-7xl mx-auto px-6 py-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-6">
+                        <div class="floating-element">
+                            <svg width="60" height="60" viewBox="0 0 80 80">
+                                <defs>
+                                    <linearGradient id="headerLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#E60023;stop-opacity:1" />
+                                        <stop offset="50%" style="stop-color:#FF4757;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#E60023;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="headerAccentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+                                        <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:0.8" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                <circle cx="40" cy="40" r="35" fill="url(#headerLogoGradient)" opacity="0.9"/>
+                                <path d="M25 50 L35 35 L45 42 L55 25" stroke="url(#headerAccentGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M50 25 L55 25 L55 30" stroke="url(#headerAccentGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="30" cy="45" r="2" fill="url(#headerAccentGradient)" opacity="0.8"/>
+                                <circle cx="40" cy="38" r="2" fill="url(#headerAccentGradient)" opacity="0.8"/>
+                                <circle cx="50" cy="30" r="2" fill="url(#headerAccentGradient)" opacity="0.8"/>
+                                <path d="M40 15 C45 15 48 18 48 22 C48 26 45 29 40 32 C35 29 32 26 32 22 C32 18 35 15 40 15 Z" fill="url(#headerAccentGradient)" opacity="0.3"/>
+                                <circle cx="40" cy="22" r="3" fill="url(#headerAccentGradient)" opacity="0.6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-white gradient-text serif">PINTREND ANALYTICS</h1>
+                            <p class="text-gray-300 text-sm">Complete Pinterest Trends Dashboard</p>
+                            <div class="text-xs text-gray-500 mt-1">Status: <span class="text-green-400">● Connected</span> | Real-time Simulation</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button 
+                            onclick="toggleAdminPanel()"
+                            class="chrome-button text-white px-4 py-2 rounded-xl font-bold relative z-10 text-sm"
+                        >
+                            ⚙️ Admin Panel
+                        </button>
+                        <button 
+                            onclick="exportData()"
+                            class="chrome-button text-white px-4 py-2 rounded-xl font-bold relative z-10 text-sm"
+                        >
+                            📊 Export
+                        </button>
+                        <button 
+                            onclick="handleLogout()"
+                            class="chrome-button text-white px-6 py-3 rounded-xl font-bold relative z-10"
+                        >
+                            🚪 Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="hidden admin-panel border-b border-white/10">
+            <div class="max-w-7xl mx-auto px-6 py-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <button onclick="showAddTrendModal()" class="chrome-button text-white px-4 py-2 rounded-xl font-bold text-sm">
+                        ➕ Add Trend
+                    </button>
+                    <button onclick="syncPinterestData()" class="chrome-button text-white px-4 py-2 rounded-xl font-bold text-sm">
+                        🔄 Sync Pinterest
+                    </button>
+                    <button onclick="viewAnalytics()" class="chrome-button text-white px-4 py-2 rounded-xl font-bold text-sm">
+                        📈 Analytics
+                    </button>
+                    <button onclick="manageUsers()" class="chrome-button text-white px-4 py-2 rounded-xl font-bold text-sm">
+                        👥 Users
+                    </button>
+                    <button onclick="generateReport()" class="chrome-button text-white px-4 py-2 rounded-xl font-bold text-sm">
+                        📋 Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6 luxury-bg luxury-grid min-h-screen">
+            <!-- Search Section -->
+            <div class="glass-card rounded-3xl p-6 mb-8">
+                <form id="searchForm" onsubmit="searchTrends(event)" class="flex flex-col md:flex-row gap-4 items-center">
+                    <div class="flex-1 relative">
+                        <input 
+                            type="text" 
+                            id="searchInput"
+                            placeholder="Search trending niches, categories, or keywords..."
+                            class="w-full p-4 pl-12 rounded-2xl chrome-input text-white placeholder-gray-400"
+                        />
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">
+                            🔍
+                        </div>
+                    </div>
+                    <select id="categoryFilter" class="chrome-input text-white px-4 py-4 rounded-2xl">
+                        <option value="">All Categories</option>
+                        <option value="Home">🏠 Home & Decor</option>
+                        <option value="Fashion">👗 Fashion & Style</option>
+                        <option value="Food">🍽️ Food & Recipes</option>
+                        <option value="Beauty">💄 Beauty & Skincare</option>
+                        <option value="Lifestyle">✨ Lifestyle</option>
+                        <option value="Wedding">💒 Wedding & Events</option>
+                        <option value="Garden">🌱 Garden & Plants</option>
+                        <option value="Gaming">🎮 Gaming & Tech</option>
+                        <option value="Travel">✈️ Travel & Adventure</option>
+                        <option value="Art">🎨 Art & Design</option>
+                    </select>
+                    <select id="priorityFilter" class="chrome-input text-white px-4 py-4 rounded-2xl">
+                        <option value="">All Priorities</option>
+                        <option value="High">🔥 High Priority</option>
+                        <option value="Medium">⭐ Medium Priority</option>
+                        <option value="Low">✨ Low Priority</option>
+                    </select>
+                    <button 
+                        type="submit"
+                        class="chrome-button text-white px-8 py-4 rounded-2xl font-bold relative z-10"
+                    >
+                        ✨ Analyze Trends
+                    </button>
+                </form>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-card rounded-2xl p-6 floating-element" style="background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%); border: 1px solid rgba(255, 107, 107, 0.3);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm serif">Total Trends</p>
+                            <p class="text-4xl font-bold stat-glow text-white" id="totalTrends">24</p>
+                            <p class="text-xs text-green-400 mt-1">↗ +12% this week</p>
+                        </div>
+                        <div class="text-4xl gradient-text">📈</div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 floating-element" style="animation-delay: 0.5s; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%); border: 1px solid rgba(34, 197, 94, 0.3);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm serif">High Priority</p>
+                            <p class="text-4xl font-bold text-white stat-glow" id="highTrends">8</p>
+                            <p class="text-xs text-green-400 mt-1">↗ +3 new</p>
+                        </div>
+                        <div class="text-4xl gradient-text">💎</div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 floating-element" style="animation-delay: 1s; background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%); border: 1px solid rgba(251, 191, 36, 0.3);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm serif">Medium Priority</p>
+                            <p class="text-4xl font-bold text-white stat-glow" id="mediumTrends">10</p>
+                            <p class="text-xs text-yellow-400 mt-1">→ Stable</p>
+                        </div>
+                        <div class="text-4xl gradient-text">⭐</div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 floating-element" style="animation-delay: 1.5s; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-300 text-sm serif">Low Priority</p>
+                            <p class="text-4xl font-bold text-white stat-glow" id="lowTrends">6</p>
+                            <p class="text-xs text-blue-400 mt-1">↘ -2 this week</p>
+                        </div>
+                        <div class="text-4xl gradient-text">✨</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="glass-card rounded-3xl p-6 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white gradient-text serif">📊 Trend Analytics Overview</h2>
+                    <div class="flex gap-2">
+                        <button onclick="updateChartPeriod('7d')" class="chrome-button text-white px-3 py-1 rounded-lg text-sm" id="chart7d">7D</button>
+                        <button onclick="updateChartPeriod('30d')" class="chrome-button text-white px-3 py-1 rounded-lg text-sm" id="chart30d">30D</button>
+                        <button onclick="updateChartPeriod('90d')" class="chrome-button text-white px-3 py-1 rounded-lg text-sm" id="chart90d">90D</button>
+                    </div>
+                </div>
+                <div class="h-80 relative">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Real-time Activity Feed -->
+            <div class="glass-card rounded-3xl p-6 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-6 gradient-text serif">🔴 Live Activity Feed</h2>
+                <div id="activityFeed" class="space-y-3 max-h-60 overflow-y-auto">
+                    <!-- Activity items will be populated here -->
+                </div>
+            </div>
+
+            <!-- Advertisement Space -->
+            <div class="glass-card rounded-3xl p-6 mb-8" style="background: linear-gradient(135deg, rgba(230, 0, 35, 0.08) 0%, rgba(255, 71, 87, 0.05) 50%, rgba(0, 0, 0, 0.1) 100%); border: 1px solid rgba(230, 0, 35, 0.2);">
+                <div class="text-center mb-4">
+                    <span class="text-xs text-gray-500 uppercase tracking-wider">Sponsored Content</span>
+                </div>
+                
+                <div id="adSpace" class="min-h-[300px] flex items-center justify-center bg-black/20 rounded-2xl border border-white/10 backdrop-filter backdrop-blur-sm">
+                    <div class="text-center p-8 max-w-2xl" id="currentAd">
+                        <div class="mb-6">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-2xl">
+                                🚀
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Boost Your Pinterest Marketing</h3>
+                            <p class="text-gray-300 mb-6">Get 10x more engagement with our AI-powered Pinterest automation tools. Trusted by 50K+ marketers worldwide.</p>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                            <button class="chrome-button px-8 py-3 rounded-xl text-white font-bold relative z-10 cursor-pointer" onclick="trackAdClick()">
+                                🎯 Learn More
+                            </button>
+                            <button class="chrome-button px-8 py-3 rounded-xl text-white font-bold relative z-10 cursor-pointer" onclick="trackAdClick()">
+                                📊 Free Trial
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 mt-4 text-center">
+                    <div class="text-xs text-gray-500">
+                        <div class="font-bold text-white" id="adImpressions">15,420</div>
+                        <div>Impressions</div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <div class="font-bold text-white" id="adClicks">892</div>
+                        <div>Clicks</div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <div class="font-bold text-white" id="adCTR">5.78%</div>
+                        <div>CTR</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trends Grid -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold serif" style="background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">🎯 Premium Trend Collection</h2>
+                    <div class="flex gap-2">
+                        <button onclick="sortTrends('popularity')" class="chrome-button text-white px-3 py-1 rounded-lg text-sm">Sort by Priority</button>
+                        <button onclick="sortTrends('engagement')" class="chrome-button text-white px-3 py-1 rounded-lg text-sm">Sort by Engagement</button>
+                        <button onclick="sortTrends('pins')" class="chrome-button text-white px-3 py-1 rounded-lg text-sm">Sort by Pins</button>
+                    </div>
+                </div>
+                <div id="trendsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Trends will be populated here -->
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-white/30"></div>
+                <p class="mt-6 text-gray-300 text-lg serif">Analyzing Premium Trends...</p>
+                <p class="mt-2 text-gray-500 text-sm">Processing luxury data insights</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Trend Modal -->
+    <div id="addTrendModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold text-white mb-6 gradient-text serif">Add New Trend</h3>
+            <form id="addTrendForm" onsubmit="addTrend(event)">
+                <div class="space-y-4">
+                    <input type="text" name="niche" placeholder="Trend Niche" class="w-full p-3 rounded-xl chrome-input text-white placeholder-gray-400" required>
+                    <select name="popularity" class="w-full p-3 rounded-xl chrome-input text-white" required>
+                        <option value="">Select Priority</option>
+                        <option value="High">🔥 High Priority</option>
+                        <option value="Medium">⭐ Medium Priority</option>
+                        <option value="Low">✨ Low Priority</option>
+                    </select>
+                    <input type="text" name="engagement" placeholder="Engagement % (e.g., 85%)" class="w-full p-3 rounded-xl chrome-input text-white placeholder-gray-400" required>
+                    <input type="text" name="pins" placeholder="Total Pins (e.g., 2.3M)" class="w-full p-3 rounded-xl chrome-input text-white placeholder-gray-400" required>
+                    <select name="category" class="w-full p-3 rounded-xl chrome-input text-white" required>
+                        <option value="">Select Category</option>
+                        <option value="Home">🏠 Home & Decor</option>
+                        <option value="Fashion">👗 Fashion & Style</option>
+                        <option value="Food">🍽️ Food & Recipes</option>
+                        <option value="Beauty">💄 Beauty & Skincare</option>
+                        <option value="Lifestyle">✨ Lifestyle</option>
+                        <option value="Wedding">💒 Wedding & Events</option>
+                        <option value="Garden">🌱 Garden & Plants</option>
+                        <option value="Gaming">🎮 Gaming & Tech</option>
+                        <option value="Travel">✈️ Travel & Adventure</option>
+                        <option value="Art">🎨 Art & Design</option>
+                    </select>
+                    <textarea name="description" placeholder="Trend Description" class="w-full p-3 rounded-xl chrome-input text-white placeholder-gray-400 h-24" required></textarea>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="flex-1 chrome-button text-white py-3 rounded-xl font-bold">✨ Add Trend</button>
+                    <button type="button" onclick="closeAddTrendModal()" class="flex-1 chrome-button text-white py-3 rounded-xl font-bold">❌ Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Simulated Database
+        let trendsDatabase = [
+            {
+                id: 1,
+                niche: "Sustainable Home Decor",
+                popularity: "High",
+                engagement: "95%",
+                pins: "2.3M",
+                description: "Eco-friendly furniture and decor gaining massive traction with environmentally conscious consumers",
+                category: "Home",
+                created: new Date('2024-01-15')
+            },
+            {
+                id: 2,
+                niche: "Cottagecore Aesthetics",
+                popularity: "High",
+                engagement: "92%",
+                pins: "1.8M",
+                description: "Rural, cozy lifestyle content trending heavily among millennials and Gen Z",
+                category: "Lifestyle",
+                created: new Date('2024-01-14')
+            },
+            {
+                id: 3,
+                niche: "Plant-Based Recipes",
+                popularity: "High",
+                engagement: "89%",
+                pins: "3.1M",
+                description: "Vegan and vegetarian cooking content surging as health consciousness grows",
+                category: "Food",
+                created: new Date('2024-01-13')
+            },
+            {
+                id: 4,
+                niche: "Minimalist Fashion",
+                popularity: "Medium",
+                engagement: "78%",
+                pins: "1.2M",
+                description: "Clean, simple wardrobe essentials trending as people embrace minimalism",
+                category: "Fashion",
+                created: new Date('2024-01-12')
+            },
+            {
+                id: 5,
+                niche: "DIY Skincare",
+                popularity: "Medium",
+                engagement: "82%",
+                pins: "950K",
+                description: "Homemade beauty treatments gaining popularity as natural beauty trends rise",
+                category: "Beauty",
+                created: new Date('2024-01-11')
+            },
+            {
+                id: 6,
+                niche: "Vintage Jewelry",
+                popularity: "Medium",
+                engagement: "75%",
+                pins: "680K",
+                description: "Retro and antique jewelry styles trending as vintage fashion makes comeback",
+                category: "Fashion",
+                created: new Date('2024-01-10')
+            },
+            {
+                id: 7,
+                niche: "Boho Wedding Decor",
+                popularity: "Medium",
+                engagement: "85%",
+                pins: "1.4M",
+                description: "Bohemian wedding themes increasingly popular for outdoor and destination weddings",
+                category: "Wedding",
+                created: new Date('2024-01-09')
+            },
+            {
+                id: 8,
+                niche: "Urban Gardening",
+                popularity: "Low",
+                engagement: "65%",
+                pins: "420K",
+                description: "City-based gardening solutions emerging as urban dwellers seek green spaces",
+                category: "Garden",
+                created: new Date('2024-01-08')
+            },
+            {
+                id: 9,
+                niche: "Retro Gaming Setup",
+                popularity: "Low",
+                engagement: "58%",
+                pins: "380K",
+                description: "Nostalgic gaming room designs trending among gaming enthusiasts",
+                category: "Gaming",
+                created: new Date('2024-01-07')
+            },
+            {
+                id: 10,
+                niche: "Artisan Bread Making",
+                popularity: "Low",
+                engagement: "72%",
+                pins: "520K",
+                description: "Homemade bread recipes gaining interest as people rediscover traditional baking",
+                category: "Food",
+                created: new Date('2024-01-06')
+            },
+            {
+                id: 11,
+                niche: "Dark Academia Fashion",
+                popularity: "High",
+                engagement: "88%",
+                pins: "1.9M",
+                description: "Scholarly, vintage-inspired fashion aesthetic gaining massive popularity among students",
+                category: "Fashion",
+                created: new Date('2024-01-05')
+            },
+            {
+                id: 12,
+                niche: "Maximalist Interior Design",
+                popularity: "Medium",
+                engagement: "79%",
+                pins: "1.1M",
+                description: "Bold, colorful, and eclectic home decor trending as counter to minimalism",
+                category: "Home",
+                created: new Date('2024-01-04')
+            },
+            {
+                id: 13,
+                niche: "Korean Skincare Routine",
+                popularity: "High",
+                engagement: "91%",
+                pins: "2.7M",
+                description: "K-beauty multi-step skincare routines dominating beauty trends worldwide",
+                category: "Beauty",
+                created: new Date('2024-01-03')
+            },
+            {
+                id: 14,
+                niche: "Sourdough Art",
+                popularity: "Medium",
+                engagement: "73%",
+                pins: "890K",
+                description: "Creative sourdough bread designs and scoring patterns trending among home bakers",
+                category: "Food",
+                created: new Date('2024-01-02')
+            },
+            {
+                id: 15,
+                niche: "Grandmillennial Style",
+                popularity: "Medium",
+                engagement: "76%",
+                pins: "1.3M",
+                description: "Young people embracing traditional, grandparent-inspired home decor and fashion",
+                category: "Lifestyle",
+                created: new Date('2024-01-01')
+            },
+            {
+                id: 16,
+                niche: "Dopamine Dressing",
+                popularity: "High",
+                engagement: "87%",
+                pins: "2.1M",
+                description: "Bright, mood-boosting fashion choices trending as people seek joy through clothing",
+                category: "Fashion",
+                created: new Date('2023-12-31')
+            },
+            {
+                id: 17,
+                niche: "Micro Wedding Ideas",
+                popularity: "Medium",
+                engagement: "81%",
+                pins: "1.6M",
+                description: "Intimate, small-scale wedding celebrations gaining popularity post-pandemic",
+                category: "Wedding",
+                created: new Date('2023-12-30')
+            },
+            {
+                id: 18,
+                niche: "Vertical Garden Walls",
+                popularity: "Low",
+                engagement: "69%",
+                pins: "450K",
+                description: "Space-saving vertical gardening solutions trending in urban environments",
+                category: "Garden",
+                created: new Date('2023-12-29')
+            },
+            {
+                id: 19,
+                niche: "Aesthetic Gaming Setups",
+                popularity: "Medium",
+                engagement: "74%",
+                pins: "980K",
+                description: "Instagram-worthy gaming room designs focusing on aesthetics and functionality",
+                category: "Gaming",
+                created: new Date('2023-12-28')
+            },
+            {
+                id: 20,
+                niche: "Slow Travel Photography",
+                popularity: "Low",
+                engagement: "67%",
+                pins: "390K",
+                description: "Mindful, sustainable travel photography focusing on authentic local experiences",
+                category: "Travel",
+                created: new Date('2023-12-27')
+            },
+            {
+                id: 21,
+                niche: "Abstract Digital Art",
+                popularity: "Medium",
+                engagement: "77%",
+                pins: "1.2M",
+                description: "AI-generated and digital abstract art trending among creative communities",
+                category: "Art",
+                created: new Date('2023-12-26')
+            },
+            {
+                id: 22,
+                niche: "Functional Fitness",
+                popularity: "High",
+                engagement: "86%",
+                pins: "2.4M",
+                description: "Practical, everyday movement-based fitness routines gaining mainstream appeal",
+                category: "Lifestyle",
+                created: new Date('2023-12-25')
+            },
+            {
+                id: 23,
+                niche: "Nostalgic Y2K Fashion",
+                popularity: "High",
+                engagement: "90%",
+                pins: "2.8M",
+                description: "Early 2000s fashion revival with metallic fabrics, low-rise jeans, and futuristic accessories",
+                category: "Fashion",
+                created: new Date('2023-12-24')
+            },
+            {
+                id: 24,
+                niche: "Fermented Foods DIY",
+                popularity: "Low",
+                engagement: "71%",
+                pins: "510K",
+                description: "Home fermentation of kombucha, kimchi, and other probiotic foods trending for health",
+                category: "Food",
+                created: new Date('2023-12-23')
+            }
+        ];
+
+        let currentTrends = [...trendsDatabase];
+        let chart;
+        let currentUser = null;
+        let activityTimer;
+
+        // Simulated user data
+        const users = [
+            { email: 'admin@pinterest.com', password: 'admin123', role: 'admin', name: 'Admin User' },
+            { email: 'user@pinterest.com', password: 'user123', role: 'user', name: 'Regular User' }
+        ];
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboardScreen').classList.remove('hidden');
+                initializeDashboard();
+                showNotification(`Welcome back, ${user.name}!`, 'success');
+                startActivityFeed();
+            } else {
+                showNotification('Invalid credentials! Use admin@pinterest.com / admin123', 'error');
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('emailInput').value = 'admin@pinterest.com';
+            document.getElementById('passwordInput').value = 'admin123';
+            showNotification('Logged out successfully', 'success');
+            stopActivityFeed();
+        }
+
+        function searchTrends(event) {
+            event.preventDefault();
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+            
+            // Show loading
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('trendsGrid').classList.add('hidden');
+            
+            // Simulate API delay
+            setTimeout(() => {
+                let filteredTrends = [...trendsDatabase];
+                
+                if (query) {
+                    filteredTrends = filteredTrends.filter(trend => 
+                        trend.niche.toLowerCase().includes(query) ||
+                        trend.description.toLowerCase().includes(query) ||
+                        trend.category.toLowerCase().includes(query)
+                    );
+                }
+                
+                if (category) {
+                    filteredTrends = filteredTrends.filter(trend => trend.category === category);
+                }
+                
+                if (priority) {
+                    filteredTrends = filteredTrends.filter(trend => trend.popularity === priority);
+                }
+                
+                currentTrends = filteredTrends;
+                displayTrends(filteredTrends);
+                updateStats();
+                
+                // Hide loading
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('trendsGrid').classList.remove('hidden');
+                
+                showNotification(`Found ${filteredTrends.length} trends matching your criteria`, 'success');
+            }, 1000);
+        }
+
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function showAddTrendModal() {
+            document.getElementById('addTrendModal').classList.remove('hidden');
+        }
+
+        function closeAddTrendModal() {
+            document.getElementById('addTrendModal').classList.add('hidden');
+            document.getElementById('addTrendForm').reset();
+        }
+
+        function addTrend(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            const newTrend = {
+                id: trendsDatabase.length + 1,
+                niche: formData.get('niche'),
+                popularity: formData.get('popularity'),
+                engagement: formData.get('engagement'),
+                pins: formData.get('pins'),
+                category: formData.get('category'),
+                description: formData.get('description'),
+                created: new Date()
+            };
+            
+            trendsDatabase.push(newTrend);
+            currentTrends = [...trendsDatabase];
+            
+            closeAddTrendModal();
+            displayTrends(currentTrends);
+            updateStats();
+            updateChart();
+            
+            showNotification('New trend added successfully!', 'success');
+        }
+
+        function exportData() {
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "ID,Niche,Priority,Engagement,Pins,Category,Description,Created\n" +
+                currentTrends.map(trend => 
+                    `${trend.id},"${trend.niche}","${trend.popularity}","${trend.engagement}","${trend.pins}","${trend.category}","${trend.description}","${trend.created}"`
+                ).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "pinterest_trends_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Data exported successfully!', 'success');
+        }
+
+        function syncPinterestData() {
+            showNotification('Syncing with Pinterest API...', 'success');
+            
+            // Simulate API sync
+            setTimeout(() => {
+                const newTrends = [
+                    {
+                        id: trendsDatabase.length + 1,
+                        niche: "AI-Generated Art Tutorials",
+                        popularity: "High",
+                        engagement: "94%",
+                        pins: "3.2M",
+                        category: "Art",
+                        description: "Step-by-step guides for creating AI art trending among digital artists",
+                        created: new Date()
+                    },
+                    {
+                        id: trendsDatabase.length + 2,
+                        niche: "Sustainable Fashion Swaps",
+                        popularity: "Medium",
+                        engagement: "83%",
+                        pins: "1.7M",
+                        category: "Fashion",
+                        description: "Eco-friendly alternatives to fast fashion gaining traction",
+                        created: new Date()
+                    }
+                ];
+                
+                trendsDatabase.push(...newTrends);
+                currentTrends = [...trendsDatabase];
+                displayTrends(currentTrends);
+                updateStats();
+                updateChart();
+                
+                showNotification(`Synced ${newTrends.length} new trends from Pinterest!`, 'success');
+            }, 2000);
+        }
+
+        function viewAnalytics() {
+            showNotification('Opening advanced analytics...', 'success');
+            // In a real app, this would open a detailed analytics page
+        }
+
+        function manageUsers() {
+            showNotification('User management panel would open here', 'success');
+            // In a real app, this would open user management interface
+        }
+
+        function generateReport() {
+            showNotification('Generating comprehensive report...', 'success');
+            // In a real app, this would generate and download a detailed report
+        }
+
+        function sortTrends(criteria) {
+            let sorted = [...currentTrends];
+            
+            switch(criteria) {
+                case 'popularity':
+                    sorted.sort((a, b) => {
+                        const order = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                        return order[b.popularity] - order[a.popularity];
+                    });
+                    break;
+                case 'engagement':
+                    sorted.sort((a, b) => {
+                        const aEng = parseInt(a.engagement.replace('%', ''));
+                        const bEng = parseInt(b.engagement.replace('%', ''));
+                        return bEng - aEng;
+                    });
+                    break;
+                case 'pins':
+                    sorted.sort((a, b) => {
+                        const aNum = parseFloat(a.pins.replace(/[KM]/g, '')) * (a.pins.includes('M') ? 1000000 : 1000);
+                        const bNum = parseFloat(b.pins.replace(/[KM]/g, '')) * (b.pins.includes('M') ? 1000000 : 1000);
+                        return bNum - aNum;
+                    });
+                    break;
+            }
+            
+            currentTrends = sorted;
+            displayTrends(currentTrends);
+            showNotification(`Sorted by ${criteria}`, 'success');
+        }
+
+        function updateChartPeriod(period) {
+            // Remove active state from all buttons
+            document.querySelectorAll('[id^="chart"]').forEach(btn => {
+                btn.style.background = '';
+            });
+            
+            // Add active state to clicked button
+            document.getElementById(`chart${period}`).style.background = 'rgba(255, 255, 255, 0.2)';
+            
+            updateChart(period);
+            showNotification(`Chart updated for ${period} period`, 'success');
+        }
+
+        function trackAdClick() {
+            // Simulate ad click tracking
+            const impressions = document.getElementById('adImpressions');
+            const clicks = document.getElementById('adClicks');
+            const ctr = document.getElementById('adCTR');
+            
+            const currentClicks = parseInt(clicks.textContent.replace(',', '')) + 1;
+            const currentImpressions = parseInt(impressions.textContent.replace(',', ''));
+            
+            clicks.textContent = currentClicks.toLocaleString();
+            ctr.textContent = ((currentClicks / currentImpressions) * 100).toFixed(2) + '%';
+            
+            showNotification('Ad click tracked! Opening advertiser page...', 'success');
+            
+            // Simulate opening advertiser page
+            setTimeout(() => {
+                window.open('https://example.com/pinterest-marketing-tools', '_blank');
+            }, 500);
+        }
+
+        function startActivityFeed() {
+            const activities = [
+                "🔥 New high-priority trend detected: Sustainable Tech Gadgets",
+                "📈 Cottagecore Aesthetics engagement increased by 15%",
+                "👥 3 new users joined the platform",
+                "🎯 Plant-Based Recipes reached 3.2M pins",
+                "⚡ Pinterest API sync completed successfully",
+                "📊 Weekly report generated and sent to admins",
+                "🔍 Popular search: 'minimalist home office'",
+                "💎 Dark Academia Fashion trending in Fashion category",
+                "🌱 Urban Gardening showing growth potential",
+                "🎨 New art trends emerging in digital space",
+                "📱 Mobile engagement up 23% this week",
+                "🏠 Home decor trends dominating weekend traffic"
+            ];
+            
+            let activityIndex = 0;
+            
+            function addActivity() {
+                const feed = document.getElementById('activityFeed');
+                const activity = activities[activityIndex % activities.length];
+                const time = new Date().toLocaleTimeString();
+                
+                const activityElement = document.createElement('div');
+                activityElement.className = 'flex items-center justify-between p-3 rounded-xl glass-card text-sm';
+                activityElement.innerHTML = `
+                    <span class="text-white">${activity}</span>
+                    <span class="text-gray-400 text-xs">${time}</span>
+                `;
+                
+                feed.insertBefore(activityElement, feed.firstChild);
+                
+                // Keep only last 10 activities
+                while (feed.children.length > 10) {
+                    feed.removeChild(feed.lastChild);
+                }
+                
+                activityIndex++;
+            }
+            
+            // Add initial activities
+            for (let i = 0; i < 5; i++) {
+                addActivity();
+            }
+            
+            // Continue adding activities every 10 seconds
+            activityTimer = setInterval(addActivity, 10000);
+        }
+
+        function stopActivityFeed() {
+            if (activityTimer) {
+                clearInterval(activityTimer);
+            }
+        }
+
+        function initializeDashboard() {
+            displayTrends(currentTrends);
+            updateStats();
+            initializeChart();
+            
+            // Set default chart period
+            document.getElementById('chart7d').style.background = 'rgba(255, 255, 255, 0.2)';
+        }
+
+        function displayTrends(trends) {
+            const grid = document.getElementById('trendsGrid');
+            
+            if (trends.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 glass-card rounded-3xl">
+                        <div class="text-6xl mb-4 gradient-text">🔍</div>
+                        <h3 class="text-xl font-semibold text-white mb-2 serif">No Trends Found</h3>
+                        <p class="text-gray-400">Try different search terms or filters</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = trends.map(trend => {
+                const priorityIcon = trend.popularity === 'High' ? '💎' : 
+                                   trend.popularity === 'Medium' ? '⭐' : '✨';
+                
+                const cardGradient = trend.popularity === 'High' ? 
+                    'background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 154, 158, 0.08) 50%, rgba(0, 0, 0, 0.1) 100%); border: 1px solid rgba(255, 107, 107, 0.2);' :
+                    trend.popularity === 'Medium' ? 
+                    'background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(252, 211, 77, 0.08) 50%, rgba(0, 0, 0, 0.1) 100%); border: 1px solid rgba(251, 191, 36, 0.2);' :
+                    'background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(96, 165, 250, 0.08) 50%, rgba(0, 0, 0, 0.1) 100%); border: 1px solid rgba(59, 130, 246, 0.2);';
+                
+                const categoryEmoji = {
+                    'Home': '🏠',
+                    'Fashion': '👗',
+                    'Food': '🍽️',
+                    'Beauty': '💄',
+                    'Lifestyle': '✨',
+                    'Wedding': '💒',
+                    'Garden': '🌱',
+                    'Gaming': '🎮',
+                    'Travel': '✈️',
+                    'Art': '🎨'
+                };
+                
+                return `
+                    <div class="glass-card rounded-2xl overflow-hidden floating-element" style="${cardGradient}">
+                        <div class="p-4 text-white backdrop-filter backdrop-blur-lg">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold serif">${trend.niche}</h3>
+                                <span class="text-2xl gradient-text">${priorityIcon}</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-1">
+                                <p class="text-white/90 text-sm serif">${trend.popularity} Priority</p>
+                                <p class="text-white/70 text-xs">${categoryEmoji[trend.category] || '📌'} ${trend.category}</p>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-300 mb-4 text-sm">${trend.description}</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="text-center p-3 rounded-xl" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <p class="text-2xl font-bold text-white stat-glow">${trend.engagement}</p>
+                                    <p class="text-xs text-gray-400 serif">Engagement</p>
+                                </div>
+                                <div class="text-center p-3 rounded-xl" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <p class="text-2xl font-bold text-white stat-glow">${trend.pins}</p>
+                                    <p class="text-xs text-gray-400 serif">Total Pins</p>
+                                </div>
+                            </div>
+                            ${currentUser && currentUser.role === 'admin' ? `
+                                <div class="mt-4 flex gap-2">
+                                    <button onclick="editTrend(${trend.id})" class="flex-1 chrome-button text-white py-2 rounded-lg text-xs">✏️ Edit</button>
+                                    <button onclick="deleteTrend(${trend.id})" class="flex-1 chrome-button text-white py-2 rounded-lg text-xs">🗑️ Delete</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const high = currentTrends.filter(t => t.popularity === 'High').length;
+            const medium = currentTrends.filter(t => t.popularity === 'Medium').length;
+            const low = currentTrends.filter(t => t.popularity === 'Low').length;
+            
+            document.getElementById('totalTrends').textContent = currentTrends.length;
+            document.getElementById('highTrends').textContent = high;
+            document.getElementById('mediumTrends').textContent = medium;
+            document.getElementById('lowTrends').textContent = low;
+        }
+
+        function initializeChart() {
+            updateChart('7d');
+        }
+
+        function updateChart(period = '7d') {
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            
+            let dates, highData, mediumData, lowData;
+            
+            switch(period) {
+                case '7d':
+                    dates = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    highData = [5, 7, 6, 8, 9, 7, 8];
+                    mediumData = [8, 10, 12, 9, 11, 13, 10];
+                    lowData = [4, 6, 5, 7, 6, 5, 6];
+                    break;
+                case '30d':
+                    dates = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                    highData = [28, 32, 30, 35];
+                    mediumData = [45, 48, 52, 47];
+                    lowData = [22, 25, 23, 26];
+                    break;
+                case '90d':
+                    dates = ['Month 1', 'Month 2', 'Month 3'];
+                    highData = [125, 140, 135];
+                    mediumData = [192, 205, 198];
+                    lowData = [96, 102, 99];
+                    break;
+            }
+            
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'High Priority Trends',
+                        data: highData,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ff6b6b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Medium Priority Trends',
+                        data: mediumData,
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fbbf24',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Low Priority Trends',
+                        data: lowData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#ffffff',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        function editTrend(trendId) {
+            const trend = trendsDatabase.find(t => t.id === trendId);
+            if (trend) {
+                // Pre-fill the add trend modal with existing data
+                showAddTrendModal();
+                document.querySelector('[name="niche"]').value = trend.niche;
+                document.querySelector('[name="popularity"]').value = trend.popularity;
+                document.querySelector('[name="engagement"]').value = trend.engagement;
+                document.querySelector('[name="pins"]').value = trend.pins;
+                document.querySelector('[name="category"]').value = trend.category;
+                document.querySelector('[name="description"]').value = trend.description;
+                
+                // Change form behavior to edit mode
+                const form = document.getElementById('addTrendForm');
+                form.onsubmit = function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(event.target);
+                    
+                    // Update the trend
+                    trend.niche = formData.get('niche');
+                    trend.popularity = formData.get('popularity');
+                    trend.engagement = formData.get('engagement');
+                    trend.pins = formData.get('pins');
+                    trend.category = formData.get('category');
+                    trend.description = formData.get('description');
+                    
+                    currentTrends = [...trendsDatabase];
+                    closeAddTrendModal();
+                    displayTrends(currentTrends);
+                    updateStats();
+                    updateChart();
+                    
+                    showNotification('Trend updated successfully!', 'success');
+                    
+                    // Reset form behavior
+                    form.onsubmit = addTrend;
+                };
+            }
+        }
+
+        function deleteTrend(trendId) {
+            if (confirm('Are you sure you want to delete this trend?')) {
+                trendsDatabase = trendsDatabase.filter(t => t.id !== trendId);
+                currentTrends = [...trendsDatabase];
+                displayTrends(currentTrends);
+                updateStats();
+                updateChart();
+                showNotification('Trend deleted successfully!', 'success');
+            }
+        }
+
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-fill login credentials for demo
+            document.getElementById('emailInput').value = 'admin@pinterest.com';
+            document.getElementById('passwordInput').value = 'admin123';
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967387ac71f54ea3',t:'MTc1Mzg2NDYwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
